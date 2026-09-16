@@ -8,6 +8,7 @@ import {
   isHeadroomWrappedCommand
 } from './headroom-wrap-command'
 import { resolveAgentLaunchCommand } from './tui-agent-launch-command'
+import { buildAgentResumeStartupPlan } from './tui-agent-resume-startup'
 
 describe('headroom wrappable agents', () => {
   it("maps Mistral Vibe to Headroom's differently-named subcommand", () => {
@@ -131,10 +132,9 @@ describe('headroomLaunchSettings', () => {
 })
 
 describe('resumed sessions', () => {
-  it('wraps a resume launch, not just a fresh one', async () => {
+  it('wraps a resume launch, not just a fresh one', () => {
     // Regression: the resume path is a separate resolver call site. It was missed on the first
     // pass, so every `claude --resume` launched unwrapped while the toggle read as on.
-    const { buildAgentResumeStartupPlan } = await import('./tui-agent-resume-startup')
     const plan = buildAgentResumeStartupPlan({
       agent: 'claude',
       providerSession: { key: 'session_id' as const, id: 'abc-123' },
@@ -147,8 +147,7 @@ describe('resumed sessions', () => {
     expect(plan?.headroomWrapped).toBe(true)
   })
 
-  it('leaves a resume launch alone when the agent is not opted in', async () => {
-    const { buildAgentResumeStartupPlan } = await import('./tui-agent-resume-startup')
+  it('leaves a resume launch alone when the agent is not opted in', () => {
     const plan = buildAgentResumeStartupPlan({
       agent: 'claude',
       providerSession: { key: 'session_id' as const, id: 'abc-123' },
