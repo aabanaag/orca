@@ -50,7 +50,7 @@ function resolveDescription(control: AgentHeadroomControl): string {
   if (!control.isInstalled) {
     return translate(
       'auto.components.settings.AgentHeadroomControl.notInstalled',
-      'Not found on PATH. Install with `pip install "headroom-ai[all]"`, then Refresh.'
+      'Not found on PATH. Install headroom-ai, then use Refresh above.'
     )
   }
   if (control.blockedByCmdOverride) {
@@ -61,6 +61,6 @@ function resolveDescription(control: AgentHeadroomControl): string {
   }
   return translate(
     'auto.components.settings.AgentHeadroomControl.enabled',
-    'Compress context through a local Headroom proxy. Adds a one-time proxy start to first launch.'
+    'Compress context through a local Headroom proxy. The first launch also starts the proxy, which takes a few seconds.'
   )
 }
