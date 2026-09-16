@@ -39,6 +39,11 @@ const ResourceUsageStatusSegment = lazyWithRetry(() =>
     default: module.ResourceUsageStatusSegment
   }))
 )
+const HeadroomSavingsStatusSegment = lazyWithRetry(() =>
+  import('./HeadroomSavingsStatusSegment').then((module) => ({
+    default: module.HeadroomSavingsStatusSegment
+  }))
+)
 const PortsStatusSegment = lazyWithRetry(() =>
   import('./PortsStatusSegment').then((module) => ({ default: module.PortsStatusSegment }))
 )
@@ -244,6 +249,9 @@ export function StatusBarSurface({
 
       <div className="flex items-center gap-3">
         {!isPairedWebClientWindow() ? <CaffeinateStatusSegment iconOnly={iconOnly} /> : null}
+        <React.Suspense fallback={null}>
+          <HeadroomSavingsStatusSegment iconOnly={iconOnly} />
+        </React.Suspense>
         <RemoteServerUpdateStatusSegment iconOnly={iconOnly} />
         <SkillUpdateStatusSegment iconOnly={iconOnly} />
         <UpdateStatusSegment compact={compact} iconOnly={iconOnly} />
