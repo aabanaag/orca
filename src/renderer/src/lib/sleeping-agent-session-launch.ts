@@ -15,6 +15,7 @@ import {
 } from '../../../shared/tui-agent-launch-defaults'
 import type { SleepingAgentSessionRecord } from '../../../shared/agent-session-resume'
 import { translate } from '@/i18n/i18n'
+import { headroomLaunchSettings } from '../../../shared/headroom-wrap-command'
 
 export type ResumeSleepingAgentSessionsOptions = {
   suppressNavigation?: boolean
@@ -73,6 +74,7 @@ export function launchSleepingAgentSession(
     agent: record.agent,
     providerSession: record.providerSession,
     cmdOverrides: state.settings?.agentCmdOverrides ?? {},
+    ...headroomLaunchSettings(state.settings),
     agentArgs:
       launchConfig !== undefined
         ? launchConfig.agentArgs

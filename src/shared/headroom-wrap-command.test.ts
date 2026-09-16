@@ -129,3 +129,34 @@ describe('headroomLaunchSettings', () => {
     })
   })
 })
+
+describe('resumed sessions', () => {
+  it('wraps a resume launch, not just a fresh one', async () => {
+    // Regression: the resume path is a separate resolver call site. It was missed on the first
+    // pass, so every `claude --resume` launched unwrapped while the toggle read as on.
+    const { buildAgentResumeStartupPlan } = await import('./tui-agent-resume-startup')
+    const plan = buildAgentResumeStartupPlan({
+      agent: 'claude',
+      providerSession: { key: 'session_id' as const, id: 'abc-123' },
+      cmdOverrides: {},
+      platform: 'darwin',
+      shell: 'posix',
+      headroomAgents: { claude: true }
+    })
+    expect(plan?.launchCommand).toContain('headroom wrap claude')
+    expect(plan?.headroomWrapped).toBe(true)
+  })
+
+  it('leaves a resume launch alone when the agent is not opted in', async () => {
+    const { buildAgentResumeStartupPlan } = await import('./tui-agent-resume-startup')
+    const plan = buildAgentResumeStartupPlan({
+      agent: 'claude',
+      providerSession: { key: 'session_id' as const, id: 'abc-123' },
+      cmdOverrides: {},
+      platform: 'darwin',
+      shell: 'posix'
+    })
+    expect(plan?.launchCommand).not.toContain('headroom')
+    expect(plan?.headroomWrapped).toBeUndefined()
+  })
+})

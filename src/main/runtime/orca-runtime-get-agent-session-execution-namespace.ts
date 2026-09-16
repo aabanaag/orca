@@ -20,6 +20,7 @@ import {
 import type { AgentSessionLaunchArgs } from '../../shared/agent-session-record'
 import { resolveStartupShell } from '../../shared/tui-agent-startup-shell'
 import { resolveAgentSessionResumeArgs } from './agent-session-resume-args'
+import { headroomLaunchSettings } from '../../shared/headroom-wrap-command'
 
 export class OrcaRuntimeWithGetAgentSessionExecutionNamespace extends OrcaRuntimeWithResolveWorktreeRemovalTarget {
   protected getAgentSessionExecutionNamespace(
@@ -142,6 +143,7 @@ export class OrcaRuntimeWithGetAgentSessionExecutionNamespace extends OrcaRuntim
       agent: request.agent,
       providerSession: identity.providerSession,
       cmdOverrides: settings.agentCmdOverrides ?? {},
+      ...headroomLaunchSettings(settings),
       agentArgs: resolveAgentSessionResumeArgs({
         requestArgs: request.agentArgs,
         persistedArgs: handoffAuthority?.launchArgs,

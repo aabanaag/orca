@@ -11,6 +11,7 @@ import { resolveStartupShell, type AgentStartupShell } from './tui-agent-startup
 import { TUI_AGENT_CONFIG } from './tui-agent-config'
 import type { TuiAgent } from './tui-agent'
 import { buildAgentResumeLaunchCommand } from './agent-resume-launch-command'
+import { isHeadroomWrappedCommand, type HeadroomWrapOptions } from './headroom-wrap-command'
 
 export function buildAgentResumeStartupPlan(args: {
   agent: ResumableTuiAgent
@@ -25,6 +26,8 @@ export function buildAgentResumeStartupPlan(args: {
   sessionOptions?: Record<string, SessionOptionValue>
   sessionOptionsOverrideAgentArgs?: boolean
   isRemote?: boolean
+  headroomAgents?: Partial<Record<TuiAgent, boolean>>
+  headroomWrapOptions?: HeadroomWrapOptions
 }): AgentStartupPlan | null {
   const argv = getAgentResumeArgv(args.agent, args.providerSession, args.ompResumeFilePath)
   if (!argv) {
@@ -47,7 +50,9 @@ export function buildAgentResumeStartupPlan(args: {
         agentArgs: args.agentArgs,
         sessionOptions: args.sessionOptions,
         sessionOptionsOverrideAgentArgs: args.sessionOptionsOverrideAgentArgs,
-        isRemote: args.isRemote
+        isRemote: args.isRemote,
+        headroomAgents: args.headroomAgents,
+        headroomWrapOptions: args.headroomWrapOptions
       })
   if (!baseCommand.ok) {
     return null
@@ -62,6 +67,9 @@ export function buildAgentResumeStartupPlan(args: {
     agent: args.agent,
     launchCommand,
     expectedProcess: TUI_AGENT_CONFIG[args.agent].expectedProcess,
+    // Reads the resolved command so a session resumed from a stored `agentCommand` — which
+    // bypasses the resolver above — is still classified by what it actually launches.
+    ...(isHeadroomWrappedCommand(launchCommand) ? { headroomWrapped: true as const } : {}),
     followupPrompt: null,
     launchConfig,
     ...(args.agent === 'codex' ? { startupCommandDelivery: 'shell-ready' as const } : {}),

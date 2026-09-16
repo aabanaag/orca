@@ -27,6 +27,7 @@ import {
   getAiVaultResumeWorkspacePath,
   resolveAiVaultResumeStartupShell
 } from '@/lib/ai-vault-resume-shell'
+import { headroomLaunchSettings } from '../../../shared/headroom-wrap-command'
 
 type AiVaultResumeCommandSession = Pick<
   AiVaultSession,
@@ -168,6 +169,7 @@ function buildAiVaultResumeForWorktree(
         ...args.state.settings?.agentCmdOverrides,
         ...(args.commandOverride?.trim() ? { [args.session.agent]: args.commandOverride } : {})
       },
+      ...headroomLaunchSettings(args.state.settings),
       platform,
       shell: liveShell,
       agentArgs: resolveTuiAgentLaunchArgs(

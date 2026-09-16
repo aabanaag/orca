@@ -15,6 +15,7 @@ import {
 import type { ColdRestoreAgentResumeStartup } from './fresh-spawn-types'
 
 import type { ConnectPanePtySession } from './connect-pane-pty-session'
+import { headroomLaunchSettings } from '../../../../../shared/headroom-wrap-command'
 
 export function bindBuildColdRestoreAgentResumeStartup(session: ConnectPanePtySession): void {
   session.buildColdRestoreAgentResumeStartup = (): ColdRestoreAgentResumeStartup | null => {
@@ -61,6 +62,7 @@ export function bindBuildColdRestoreAgentResumeStartup(session: ConnectPanePtySe
       agent,
       providerSession,
       cmdOverrides: state.settings?.agentCmdOverrides ?? {},
+      ...headroomLaunchSettings(state.settings),
       agentArgs:
         launchConfig !== undefined
           ? launchConfig.agentArgs
