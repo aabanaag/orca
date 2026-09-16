@@ -11,6 +11,11 @@ import {
   type AgentStartupShell
 } from './tui-agent-startup-shell'
 import type { TuiAgent } from './tui-agent'
+import {
+  buildHeadroomWrapPrefix,
+  isHeadroomEnabledForAgent,
+  type HeadroomWrapOptions
+} from './headroom-wrap-command'
 
 export type ResolvedAgentLaunchCommand =
   | {
@@ -30,13 +35,25 @@ export function resolveAgentLaunchCommand(args: {
   sessionOptions?: Record<string, SessionOptionValue>
   sessionOptionsOverrideAgentArgs?: boolean
   isRemote?: boolean
+  /** Per-agent Headroom opt-in; see `headroomAgents` in global settings. */
+  headroomAgents?: Partial<Record<TuiAgent, boolean>>
+  headroomWrapOptions?: HeadroomWrapOptions
 }): ResolvedAgentLaunchCommand {
   const override = args.cmdOverrides[args.agent]
-  const command =
+  const baseCommand =
     override ||
     getTuiAgentLaunchCommand(TUI_AGENT_CONFIG[args.agent], args.platform, {
       isRemote: args.isRemote
     })
+  // Why an override disables wrapping rather than composing with it: `headroom wrap <tool>`
+  // resolves the agent binary itself from PATH, so it cannot honor a custom path or command.
+  // Wrapping anyway would silently discard the user's override, so the override wins and the
+  // settings pane explains why the toggle is unavailable.
+  const headroomPrefix =
+    !override && isHeadroomEnabledForAgent(args.agent, args.headroomAgents)
+      ? buildHeadroomWrapPrefix(args.agent, args.headroomWrapOptions)
+      : null
+  const command = headroomPrefix ? `${headroomPrefix} ${baseCommand}` : baseCommand
   const suffix = planAgentCliArgsSuffix(args.agentArgs, args.shell)
   if (!suffix.ok) {
     return suffix

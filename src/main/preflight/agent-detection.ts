@@ -45,6 +45,7 @@ import {
   resolveDetectedTuiAgentIds
 } from '../ipc/tui-agent-detection-commands'
 import { invalidateWslGuestEnvironment } from '../wsl/wsl-guest-environment'
+import { HEADROOM_COMMAND } from '../../shared/headroom-wrap-command'
 
 export type PreflightStatus = {
   git: { installed: boolean }
@@ -69,6 +70,8 @@ export type PreflightStatus = {
     baseUrl: string | null
     tokenConfigured: boolean
   }
+  /** Headroom context-compression CLI. Optional so older hosts that never probe it stay valid. */
+  headroom?: { installed: boolean }
 }
 
 export { detectRemoteWindowsTerminalCapabilities }
@@ -359,10 +362,11 @@ async function executePreflightCheck(
     _resetKnownHostsCache()
   }
 
-  const [gitProbe, ghProbe, glabProbe] = await Promise.all([
+  const [gitProbe, ghProbe, glabProbe, headroomProbe] = await Promise.all([
     detectCommandRuntime('git', context),
     detectCommandRuntime('gh', context),
-    detectCommandRuntime('glab', context)
+    detectCommandRuntime('glab', context),
+    detectCommandRuntime(HEADROOM_COMMAND, context)
   ])
 
   const [ghAuthenticated, glabAuthenticated, bitbucket, azureDevOps, gitea] = await Promise.all([
@@ -379,7 +383,8 @@ async function executePreflightCheck(
     glab: { installed: glabProbe.installed, authenticated: glabAuthenticated },
     bitbucket,
     azureDevOps,
-    gitea
+    gitea,
+    headroom: { installed: headroomProbe.installed }
   }
 
   return result

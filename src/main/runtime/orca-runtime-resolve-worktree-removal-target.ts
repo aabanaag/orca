@@ -25,6 +25,7 @@ import {
   resolveTuiAgentLaunchArgs,
   resolveTuiAgentLaunchEnv
 } from '../../shared/tui-agent-launch-defaults'
+import { headroomLaunchSettings } from '../../shared/headroom-wrap-command'
 
 export class OrcaRuntimeWithResolveWorktreeRemovalTarget extends OrcaRuntimeWithRemoveManagedWorktree {
   protected async resolveWorktreeRemovalTarget(
@@ -229,6 +230,7 @@ export class OrcaRuntimeWithResolveWorktreeRemovalTarget extends OrcaRuntimeWith
       agent,
       prompt: '',
       cmdOverrides: settings.agentCmdOverrides ?? {},
+      ...headroomLaunchSettings(settings),
       agentArgs: resolveTuiAgentLaunchArgs(agent, settings.agentDefaultArgs),
       agentEnv: resolveTuiAgentLaunchEnv(agent, settings.agentDefaultEnv),
       sessionOptions,

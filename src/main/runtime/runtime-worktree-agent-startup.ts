@@ -23,6 +23,7 @@ import {
 } from '../preflight/agent-detection'
 import { markRemoteAgentWorkspaceTrusted } from '../remote-agent-trust-presets'
 import type { RuntimeStore } from './runtime-store-contract'
+import { headroomLaunchSettings } from '../../shared/headroom-wrap-command'
 
 export type WorktreeStartupDraftPaste = { agent: TuiAgent; content: string }
 export type WorktreeStartupFollowup = { expectedProcess: string; prompt: string }
@@ -83,6 +84,7 @@ export async function buildWorktreeStartupForDraft(
   const launchArgs = {
     agent,
     cmdOverrides: settings.agentCmdOverrides ?? {},
+    ...headroomLaunchSettings(settings),
     agentArgs: resolveTuiAgentLaunchArgs(agent, settings.agentDefaultArgs),
     agentEnv: resolveTuiAgentLaunchEnv(agent, settings.agentDefaultEnv),
     platform,
@@ -146,6 +148,7 @@ export function buildWorktreeStartupForAgent(
     agent,
     prompt: environment.prompt ?? '',
     cmdOverrides: settings.agentCmdOverrides ?? {},
+    ...headroomLaunchSettings(settings),
     agentArgs: resolveTuiAgentLaunchArgs(agent, settings.agentDefaultArgs),
     agentEnv: resolveTuiAgentLaunchEnv(agent, settings.agentDefaultEnv),
     sessionOptions,

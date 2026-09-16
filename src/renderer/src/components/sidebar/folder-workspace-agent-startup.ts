@@ -11,6 +11,10 @@ import type { TuiAgent } from '../../../../shared/tui-agent'
 import type { AgentStartupShell } from '../../../../shared/tui-agent-startup-shell'
 import type { SessionOptionValue } from '../../../../shared/native-chat-session-options'
 import { isWslUncPath } from '../../../../shared/wsl-paths'
+import {
+  headroomLaunchSettings,
+  type HeadroomLaunchSettings
+} from '../../../../shared/headroom-wrap-command'
 
 export function getFolderWorkspaceAgentLaunchPlatform(
   projectGroup: Pick<ProjectGroup, 'connectionId' | 'parentPath'>
@@ -36,6 +40,8 @@ export function buildFolderWorkspaceLinkedStartupPlan(args: {
   linkedWorkItem: LinkedWorkItemSummary
   note: string
   agentCmdOverrides: Record<string, string> | undefined
+  headroomAgents?: HeadroomLaunchSettings['headroomAgents']
+  headroomWrapOptions?: HeadroomLaunchSettings['headroomWrapOptions']
   agentArgs?: string | null
   agentEnv?: Record<string, string>
   sessionOptions?: Record<string, SessionOptionValue>
@@ -49,6 +55,7 @@ export function buildFolderWorkspaceLinkedStartupPlan(args: {
         agent: args.agent,
         draft: linkedDraftPrompt,
         cmdOverrides: args.agentCmdOverrides ?? {},
+        ...headroomLaunchSettings(args),
         agentArgs: args.agentArgs,
         agentEnv: args.agentEnv,
         sessionOptions: args.sessionOptions,
@@ -77,6 +84,7 @@ export function buildFolderWorkspaceLinkedStartupPlan(args: {
     // Why: linked context must stay reviewable; launch empty, then paste the draft after readiness.
     prompt: '',
     cmdOverrides: args.agentCmdOverrides ?? {},
+    ...headroomLaunchSettings(args),
     agentArgs: args.agentArgs,
     agentEnv: args.agentEnv,
     sessionOptions: args.sessionOptions,

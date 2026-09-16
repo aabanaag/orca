@@ -14,6 +14,7 @@ import {
   AgentDefaultArgsInput,
   AgentDefaultEnvInput
 } from './AgentLaunchDefaultsEditor'
+import { AgentHeadroomToggle, type AgentHeadroomControl } from './AgentHeadroomControl'
 
 type AgentAvailability = 'enabled' | 'disabled'
 
@@ -74,6 +75,7 @@ export type AgentCatalogRowProps = {
   onSaveArgs: (value: string) => void
   onSaveEnv: (value: Record<string, string>) => void
   sessionSourceHome?: AgentSessionSourceHomeControl
+  headroom?: AgentHeadroomControl
 }
 
 export function AgentCatalogRow({
@@ -94,7 +96,8 @@ export function AgentCatalogRow({
   onSaveOverride,
   onSaveArgs,
   onSaveEnv,
-  sessionSourceHome
+  sessionSourceHome,
+  headroom
 }: AgentCatalogRowProps): React.JSX.Element {
   const envSummary = stringifyAgentDefaultEnvDraft(envOverride)
   const defaultEnvSummary = stringifyAgentDefaultEnvDraft(defaultEnv)
@@ -224,6 +227,11 @@ export function AgentCatalogRow({
                 envOverride={envOverride}
                 onSaveEnv={onSaveEnv}
               />
+            </div>
+          )}
+          {headroom && (
+            <div className="mt-2">
+              <AgentHeadroomToggle agentLabel={label} control={headroom} />
             </div>
           )}
           {sessionSourceHome && (

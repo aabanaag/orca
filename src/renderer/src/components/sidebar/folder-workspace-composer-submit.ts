@@ -33,6 +33,10 @@ export {
   getFolderWorkspaceAgentLaunchPlatform,
   resolveFolderWorkspaceLaunchDraft
 } from './folder-workspace-agent-startup'
+import {
+  headroomLaunchSettings,
+  type HeadroomLaunchSettings
+} from '../../../../shared/headroom-wrap-command'
 
 type FolderWorkspaceCreateInput = {
   projectGroupId: string
@@ -54,6 +58,8 @@ type SubmitFolderWorkspaceCreateParams = {
   quickAgent: TuiAgent | null
   autoRenameBranchFromWork: boolean | undefined
   agentCmdOverrides: Record<string, string> | undefined
+  headroomAgents?: HeadroomLaunchSettings['headroomAgents']
+  headroomWrapOptions?: HeadroomLaunchSettings['headroomWrapOptions']
   agentArgs?: string | null
   agentEnv?: Record<string, string>
   sessionOptions?: Record<string, SessionOptionValue>
@@ -75,6 +81,8 @@ export async function submitFolderWorkspaceCreate({
   quickAgent,
   autoRenameBranchFromWork,
   agentCmdOverrides,
+  headroomAgents,
+  headroomWrapOptions,
   agentArgs,
   agentEnv,
   sessionOptions,
@@ -106,6 +114,8 @@ export async function submitFolderWorkspaceCreate({
           linkedWorkItem,
           note,
           agentCmdOverrides,
+          headroomAgents,
+          headroomWrapOptions,
           agentArgs,
           agentEnv,
           sessionOptions,
@@ -118,6 +128,7 @@ export async function submitFolderWorkspaceCreate({
             agent: quickAgent,
             prompt: note,
             cmdOverrides: agentCmdOverrides ?? {},
+            ...headroomLaunchSettings({ headroomAgents, headroomWrapOptions }),
             agentArgs,
             agentEnv,
             sessionOptions,

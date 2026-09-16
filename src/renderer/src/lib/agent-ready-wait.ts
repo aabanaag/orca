@@ -19,6 +19,10 @@ export type AgentReadyResult = {
 }
 
 const DEFAULT_TIMEOUT_MS = 5000
+// Why so much larger: a cold `headroom wrap` loads its compression models and binds a local proxy
+// before it execs the agent, which its own startup loop budgets 20-30s for. The normal timeout
+// would expire while the agent is still legitimately on its way.
+const HEADROOM_WRAPPED_TIMEOUT_MS = 45_000
 const POLL_INTERVAL_MS = 120
 
 function resolvePrimaryPtyId(tabId: string): string | null {
@@ -69,9 +73,10 @@ function titleSuggestsReady(tabId: string): boolean {
 export async function waitForAgentReady(
   tabId: string,
   expectedProcess: string,
-  opts?: { timeoutMs?: number }
+  opts?: { timeoutMs?: number; headroomWrapped?: boolean }
 ): Promise<AgentReadyResult> {
-  const timeoutMs = opts?.timeoutMs ?? DEFAULT_TIMEOUT_MS
+  const timeoutMs =
+    opts?.timeoutMs ?? (opts?.headroomWrapped ? HEADROOM_WRAPPED_TIMEOUT_MS : DEFAULT_TIMEOUT_MS)
   const deadline = Date.now() + timeoutMs
   let attempt = 0
 
@@ -101,7 +106,11 @@ export async function waitForAgentReady(
       // non-shell subprocess, including `ls` or `git`). Gate it behind a few
       // polls so the shell's own startup children don't spoof readiness on
       // cold-start. Never accept it while the foreground is still a shell.
-      if (attempt >= 4 && !isShellProcess(foreground)) {
+      // Why the extra gate: under `headroom wrap` this signal is actively wrong. The wrapper is a
+      // Python console script, so while it boots its proxy the foreground is the interpreter -
+      // non-shell, with live children - and accepting it pastes the prompt into a terminal the
+      // agent has not started in yet. Wrapped launches must wait for a real agent signal.
+      if (attempt >= 4 && !isShellProcess(foreground) && !opts?.headroomWrapped) {
         if (process.hasChildProcesses) {
           return { ready: true, reason: 'child-process' }
         }

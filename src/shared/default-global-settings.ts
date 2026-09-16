@@ -207,6 +207,12 @@ export function buildDefaultSettings(args: {
     agentCmdOverrides: {},
     agentDefaultArgs: { ...DEFAULT_TUI_AGENT_ARGS },
     agentDefaultEnv: { ...DEFAULT_TUI_AGENT_ENV },
+    headroomAgents: {},
+    // Why `codeMemory: 'none'` by default: the `serena` default writes a Serena MCP entry into the
+    // agent's *global* config (e.g. ~/.claude.json), which Orca must not do to a user's machine
+    // without them asking. `preserve1mContext` is on because a custom base URL otherwise caps
+    // Claude's 1M window at 200k, which is a silent downgrade rather than a compression win.
+    headroomWrapOptions: { codeMemory: 'none', retrieveMcp: true, preserve1mContext: true },
     agentYoloDefaultsMigrated: true,
     agentStatusHooksEnabled: true,
     tabAutoGenerateTitle: false,

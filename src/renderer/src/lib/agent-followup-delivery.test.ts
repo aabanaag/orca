@@ -108,3 +108,55 @@ describe('sendFollowupPromptWhenAgentReady — interpreter-wrapped agents', () =
     expect(sendRuntimePtyInputVerified).toHaveBeenCalledWith(null, 'pty-1', 'ship it\r')
   })
 })
+
+describe('sendFollowupPromptWhenAgentReady — Headroom-wrapped launches', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.stubGlobal('globalThis', globalThis)
+    vi.mocked(sendRuntimePtyInputVerified).mockResolvedValue(true)
+  })
+
+  it('does not accept a python foreground while the Headroom wrapper is still booting', async () => {
+    // Headroom is itself a pip console script, so a wrapper that is still loading its compression
+    // models and binding the proxy looks exactly like a started interpreter-wrapped agent. Typing
+    // here would send the prompt into a terminal the agent has not launched in yet.
+    vi.mocked(inspectRuntimeTerminalProcess).mockResolvedValue({
+      foregroundProcess: 'python3',
+      hasChildProcesses: true
+    })
+    // Fake timers: a wrapped launch polls out its full multi-minute budget before giving up.
+    vi.useFakeTimers()
+    try {
+      const pending = sendFollowupPromptWhenAgentReady({
+        ptyId: 'pty-1',
+        expectedProcess: TUI_AGENT_CONFIG.aider.expectedProcess,
+        prompt: 'ship it',
+        settings: null,
+        headroomWrapped: true
+      })
+      await vi.advanceTimersByTimeAsync(300 * 150)
+      expect(await pending).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+    expect(sendRuntimePtyInputVerified).not.toHaveBeenCalled()
+  })
+
+  it('types once the wrapped agent itself owns the foreground', async () => {
+    vi.mocked(inspectRuntimeTerminalProcess).mockResolvedValue({
+      foregroundProcess: 'aider',
+      hasChildProcesses: true
+    })
+
+    const delivered = await sendFollowupPromptWhenAgentReady({
+      ptyId: 'pty-1',
+      expectedProcess: TUI_AGENT_CONFIG.aider.expectedProcess,
+      prompt: 'ship it',
+      settings: null,
+      headroomWrapped: true
+    })
+
+    expect(delivered).toBe(true)
+    expect(sendRuntimePtyInputVerified).toHaveBeenCalledWith(null, 'pty-1', 'ship it\r')
+  })
+})

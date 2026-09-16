@@ -6,6 +6,7 @@ import type { GitLabProjectSettings } from './gitlab-types'
 import type { TaskProvider } from './task-providers'
 import type { KeybindingOverrides, TerminalShortcutPolicy } from './keybindings'
 import type { AppIconId } from './app-icon'
+import type { HeadroomWrapOptions } from './headroom-wrap-command'
 import type { SourceControlAiSettings } from './source-control-ai-types'
 import type { ClaudeAgentTeamsMode } from './claude-agent-teams-tmux-compat'
 import type { TerminalCustomTheme } from './terminal-custom-themes'
@@ -388,6 +389,11 @@ export type GlobalSettings = {
   agentDefaultArgs?: Partial<Record<TuiAgent, string>>
   /** Per-agent launch environment defaults used when yolo mode is exposed as env. */
   agentDefaultEnv?: Partial<Record<TuiAgent, Record<string, string>>>
+  /** Per-agent opt-in to launching through Headroom's local compression proxy
+   *  (`headroom wrap <tool>`). Only agents in HEADROOM_WRAP_SUBCOMMAND_BY_AGENT can be enabled. */
+  headroomAgents?: Partial<Record<TuiAgent, boolean>>
+  /** Wrap behavior shared by every Headroom-routed agent. */
+  headroomWrapOptions?: HeadroomWrapOptions
   /** One-shot guard for adding yolo-mode default args to untouched agent launch profiles. */
   agentYoloDefaultsMigrated?: boolean
   /** Why: disabling must persist so startup doesn't reinstall global agent hook entries the user just removed. */

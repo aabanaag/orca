@@ -11,6 +11,10 @@ import type { TuiAgent } from '../../../shared/tui-agent'
 import { translate } from '@/i18n/i18n'
 import { resolveLocalWindowsAgentStartupShell } from '../../../shared/windows-terminal-shell'
 import type { SessionOptionValue } from '../../../shared/native-chat-session-options'
+import {
+  headroomLaunchSettings,
+  type HeadroomWrapOptions
+} from '../../../shared/headroom-wrap-command'
 
 export type SourceControlLaunchPlanDelivery =
   | 'argv'
@@ -36,6 +40,8 @@ export function planSourceControlAgentActionLaunch(args: {
   detectedAgents: TuiAgent[]
   disabledAgents?: TuiAgent[]
   cmdOverrides?: Partial<Record<TuiAgent, string>>
+  headroomAgents?: Partial<Record<TuiAgent, boolean>>
+  headroomWrapOptions?: HeadroomWrapOptions
   agentArgs?: string | null
   sessionOptions?: Record<string, SessionOptionValue>
   platform?: NodeJS.Platform
@@ -85,6 +91,7 @@ export function planSourceControlAgentActionLaunch(args: {
   }
 
   const cmdOverrides = args.cmdOverrides ?? {}
+  const headroom = headroomLaunchSettings(args)
   const platform = args.platform ?? CLIENT_PLATFORM
   const isRemote = args.isRemote ?? false
   const shell =
@@ -105,6 +112,7 @@ export function planSourceControlAgentActionLaunch(args: {
       agent,
       prompt: '',
       cmdOverrides,
+      ...headroom,
       platform,
       shell,
       isRemote,
@@ -118,6 +126,7 @@ export function planSourceControlAgentActionLaunch(args: {
       agent,
       draft: trimmedInput,
       cmdOverrides,
+      ...headroom,
       platform,
       shell,
       isRemote,
@@ -145,6 +154,7 @@ export function planSourceControlAgentActionLaunch(args: {
         agent,
         prompt: '',
         cmdOverrides,
+        ...headroom,
         platform,
         shell,
         isRemote,
@@ -159,6 +169,7 @@ export function planSourceControlAgentActionLaunch(args: {
       agent,
       prompt: '',
       cmdOverrides,
+      ...headroom,
       platform,
       shell,
       isRemote,
@@ -172,6 +183,7 @@ export function planSourceControlAgentActionLaunch(args: {
       agent,
       prompt: trimmedInput,
       cmdOverrides,
+      ...headroom,
       platform,
       shell,
       isRemote,

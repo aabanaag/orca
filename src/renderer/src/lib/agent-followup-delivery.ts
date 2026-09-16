@@ -16,9 +16,11 @@ export async function sendFollowupPromptWhenAgentReady(args: {
   expectedProcess: string
   prompt: string
   settings: RuntimeOwnerSettings
+  /** Set when the launch went through `headroom wrap`; see waitForAgentForeground. */
+  headroomWrapped?: boolean
 }): Promise<boolean> {
-  const { ptyId, expectedProcess, prompt, settings } = args
-  if (!(await waitForAgentForeground(ptyId, expectedProcess, settings))) {
+  const { ptyId, expectedProcess, prompt, settings, headroomWrapped } = args
+  if (!(await waitForAgentForeground(ptyId, expectedProcess, settings, headroomWrapped))) {
     return false
   }
   try {
@@ -33,9 +35,13 @@ export async function sendFollowupPromptWhenAgentReady(args: {
 async function waitForAgentForeground(
   ptyId: string,
   expectedProcess: string,
-  settings: RuntimeOwnerSettings
+  settings: RuntimeOwnerSettings,
+  headroomWrapped?: boolean
 ): Promise<boolean> {
-  for (let attempt = 0; attempt < 30; attempt += 1) {
+  // Why the longer budget: a cold `headroom wrap` spends 20-30s loading compression models and
+  // binding its proxy before the agent starts, far past the 30-attempt (~4.5s) default.
+  const maxAttempts = headroomWrapped ? 300 : 30
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     if (attempt > 0) {
       await new Promise((resolve) => globalThis.setTimeout(resolve, 150))
     }
@@ -51,8 +57,13 @@ async function waitForAgentForeground(
       // and over SSH when the relay falls back to the bare interpreter name. If
       // the foreground is a known agent wrapper (not a shell) with a live
       // non-shell child, the agent has taken over the PTY and can accept input.
+      // Why headroomWrapped opts out: Headroom is itself a Python console script, so a booting
+      // wrapper is indistinguishable here from an interpreter-wrapped agent - same interpreter
+      // foreground, same live children - and accepting it would type the follow-up before the
+      // agent exists. Wrapped launches wait for the exact-name match above instead.
       if (
         attempt >= 4 &&
+        !headroomWrapped &&
         isAgentForegroundWrapperProcess(foreground) &&
         !isShellProcess(foreground) &&
         process.hasChildProcesses
