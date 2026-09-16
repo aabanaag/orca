@@ -1,12 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Zap } from 'lucide-react'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { isPairedWebClientWindow } from '@/lib/desktop-window-chrome'
 import { translate } from '@/i18n/i18n'
@@ -67,10 +62,10 @@ export function HeadroomSavingsStatusSegment({
   )
 
   return (
-    <DropdownMenu modal={false}>
+    <Popover>
       <Tooltip>
         <TooltipTrigger asChild>
-          <DropdownMenuTrigger asChild>
+          <PopoverTrigger asChild>
             <button
               type="button"
               {...STATUS_BAR_CONTEXT_MENU_EXEMPT_PROPS}
@@ -80,31 +75,30 @@ export function HeadroomSavingsStatusSegment({
               <Zap className="size-3" />
               {!iconOnly ? <span className="text-[11px] font-medium">{percent}</span> : null}
             </button>
-          </DropdownMenuTrigger>
+          </PopoverTrigger>
         </TooltipTrigger>
         <TooltipContent side="top" sideOffset={6}>
           {ariaLabel}
         </TooltipContent>
       </Tooltip>
-      <DropdownMenuContent
+      <PopoverContent
         {...STATUS_BAR_CONTEXT_MENU_EXEMPT_PROPS}
         side="top"
         align="end"
         sideOffset={8}
         className="w-64"
+        onOpenAutoFocus={(event) => event.preventDefault()}
       >
-        <DropdownMenuLabel>
-          <div className="flex items-center justify-between gap-3">
-            <span>{title}</span>
-            <span className="font-normal text-muted-foreground">
-              {translate(
-                'auto.components.status.bar.HeadroomSavingsStatusSegment.local',
-                'this machine'
-              )}
-            </span>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
+        <div className="flex items-center justify-between gap-3 pb-1 text-xs font-medium">
+          <span>{title}</span>
+          <span className="font-normal text-muted-foreground">
+            {translate(
+              'auto.components.status.bar.HeadroomSavingsStatusSegment.local',
+              'this machine'
+            )}
+          </span>
+        </div>
+        <Separator />
         <SavingsRow
           label={translate(
             'auto.components.status.bar.HeadroomSavingsStatusSegment.saved',
@@ -119,7 +113,7 @@ export function HeadroomSavingsStatusSegment({
           )}
           value={`$${savings.costSavedUsd.toFixed(2)}`}
         />
-        {savings.agents.length > 0 && <DropdownMenuSeparator />}
+        {savings.agents.length > 0 && <Separator />}
         {savings.agents.map((agent) => (
           <SavingsRow
             key={agent.label}
@@ -127,14 +121,14 @@ export function HeadroomSavingsStatusSegment({
             value={`${formatHeadroomPercent(agent.savingsPercent)} · ${formatHeadroomTokens(agent.tokensSaved)}`}
           />
         ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </PopoverContent>
+    </Popover>
   )
 }
 
 function SavingsRow({ label, value }: { label: string; value: string }): React.JSX.Element {
   return (
-    <div className="flex items-center justify-between gap-3 px-2 py-1 text-xs">
+    <div className="flex items-center justify-between gap-3 py-1 text-xs">
       <span className="text-muted-foreground">{label}</span>
       <span className="font-medium tabular-nums">{value}</span>
     </div>

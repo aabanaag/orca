@@ -4008,6 +4008,13 @@
             "contact_note": "The host may still be running; only the Orca connection is unavailable.",
             "last_connected": "Last connected {{value0}}",
             "reconnect_attempt": "Attempt {{value0}}"
+          },
+          "HeadroomSavingsStatusSegment": {
+            "title": "Headroom",
+            "ariaLabel": "Headroom, {{percent}} context saved ({{tokens}} tokens)",
+            "local": "this machine",
+            "saved": "Saved",
+            "cost": "Cost saved"
           }
         }
       },
@@ -11867,6 +11874,13 @@
           "targetDescription": "Higher values increase contrast where possible. Background colors stay unchanged.",
           "subtle": "Subtle",
           "strong": "Strong"
+        },
+        "AgentHeadroomControl": {
+          "label": "Headroom",
+          "aria": "Route {{value0}} through Headroom",
+          "notInstalled": "Not found on PATH. Install headroom-ai, then use Refresh above.",
+          "overrideConflict": "Unavailable while a command override is set — Headroom resolves the agent binary itself.",
+          "enabled": "Compress context through a local Headroom proxy. The first launch also starts the proxy, which takes a few seconds."
         }
       },
       "right": {
