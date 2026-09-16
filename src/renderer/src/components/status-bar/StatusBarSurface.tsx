@@ -243,15 +243,17 @@ export function StatusBarSurface({
             </TooltipContent>
           </Tooltip>
         )}
+        {/* Sits with the usage meters rather than the right-hand tools: it is another
+            consumption readout, and reads as a unit with the per-provider numbers. */}
+        <React.Suspense fallback={null}>
+          <HeadroomSavingsStatusSegment iconOnly={iconOnly} />
+        </React.Suspense>
       </div>
 
       <div className="flex-1" />
 
       <div className="flex items-center gap-3">
         {!isPairedWebClientWindow() ? <CaffeinateStatusSegment iconOnly={iconOnly} /> : null}
-        <React.Suspense fallback={null}>
-          <HeadroomSavingsStatusSegment iconOnly={iconOnly} />
-        </React.Suspense>
         <RemoteServerUpdateStatusSegment iconOnly={iconOnly} />
         <SkillUpdateStatusSegment iconOnly={iconOnly} />
         <UpdateStatusSegment compact={compact} iconOnly={iconOnly} />
