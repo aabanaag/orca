@@ -46,6 +46,7 @@ import type {
 import type { PetApi } from './api/pet-api'
 import type { PluginsApi } from './api/plugin-host-api'
 import type { PreflightApi } from './api/preflight-api'
+import type { HeadroomApi } from './api/headroom-api'
 import type { PtyApi } from './api/pty-api'
 import type { ProjectGroupsApi, ProjectsApi, RepositoryApi } from './api/repository-api'
 import type { RuntimeApi } from './api/runtime-api'
@@ -105,6 +106,7 @@ export type PreloadApi = {
   codexConfigSync: CodexConfigSyncApi
   agentTrust: AgentTrustApi
   preflight: PreflightApi
+  headroom: HeadroomApi
   notifications: NotificationsApi
   onboarding: OnboardingApi
   dashboard: DashboardApi
@@ -177,6 +179,7 @@ export type {
   PluginMarketplaceHostListing,
   PluginMarketplaceHostSourceState
 } from './api/plugin-host-api'
+export type { HeadroomApi, HeadroomSavings } from './api/headroom-api'
 export type {
   PreflightApi,
   PreflightRuntimeContext,
