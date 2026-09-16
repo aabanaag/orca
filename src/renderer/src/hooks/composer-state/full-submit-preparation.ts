@@ -39,6 +39,7 @@ import { isNativeChatTranscriptLocalReadable } from '@/lib/native-chat-transcrip
 import type { AgentStartedTelemetry } from '@/lib/worktree-startup-payload'
 import { tuiAgentToAgentKind } from '@/lib/telemetry'
 import type { PendingSmartGitHubSubmitResolution } from './source-selection-decisions'
+import { headroomLaunchSettings } from '../../../../shared/headroom-wrap-command'
 
 export function useFullSubmitPreparation(input: FullSubmitPreparationInput) {
   const {
@@ -182,6 +183,7 @@ export function useFullSubmitPreparation(input: FullSubmitPreparationInput) {
         agent: tuiAgent,
         prompt: submitStartupPrompt,
         cmdOverrides: settings?.agentCmdOverrides ?? {},
+        ...headroomLaunchSettings(settings),
         agentArgs: resolveTuiAgentLaunchArgs(tuiAgent, settings?.agentDefaultArgs),
         agentEnv: resolveTuiAgentLaunchEnv(tuiAgent, settings?.agentDefaultEnv),
         sessionOptions: resolveInitialNativeChatSessionOptions(

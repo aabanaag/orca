@@ -3,6 +3,7 @@ import type { TuiAgent } from '../../../shared/tui-agent'
 import { TUI_AGENT_CONFIG } from '../../../shared/tui-agent-config'
 import { resolveDraftPasteReadyTimeoutMs } from '../../../shared/draft-paste-ready-timeout'
 import { useAppStore } from '@/store'
+import { isHeadroomLaunchActive } from '../../../shared/headroom-wrap-command'
 import {
   inspectRuntimeTerminalProcess,
   sendRuntimePtyInputVerified
@@ -116,8 +117,18 @@ export async function pasteDraftWhenAgentReady(args: {
     // this sidecar subscription attaches. If process/title inspection says the
     // launched agent owns the PTY, fall back to a best-effort paste instead of
     // silently dropping generated prompts.
+    // Why derived rather than passed in: this fallback only receives the agent id, but a
+    // Headroom-wrapped launch must not accept the weak child-process signal while the wrapper
+    // is still booting its proxy.
+    const headroomWrapped = agent
+      ? isHeadroomLaunchActive(agent, useAppStore.getState().settings)
+      : false
     const fallbackReady = agentConfig
-      ? await waitForAgentReady(tabId, agentConfig.expectedProcess, { timeoutMs: 1000 })
+      ? await waitForAgentReady(
+          tabId,
+          agentConfig.expectedProcess,
+          headroomWrapped ? { headroomWrapped } : { timeoutMs: 1000 }
+        )
       : { ready: false }
     if (!fallbackReady.ready) {
       onTimeout?.()

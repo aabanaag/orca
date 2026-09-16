@@ -17,6 +17,10 @@ import {
 import { translate } from '@/i18n/i18n'
 import { resolveInitialNativeChatSessionOptions } from '@/components/native-chat/native-chat-launch-session-options'
 import type { PersistedNativeChatSessionOptions } from '../../../shared/native-chat-session-options'
+import {
+  headroomLaunchSettings,
+  type HeadroomLaunchSettings
+} from '../../../shared/headroom-wrap-command'
 
 export function buildDirectWorkItemAgentStartupPlan(args: {
   agent: TuiAgent | null
@@ -28,6 +32,8 @@ export function buildDirectWorkItemAgentStartupPlan(args: {
         agentCmdOverrides?: Partial<Record<TuiAgent, string>>
         agentDefaultArgs?: Partial<Record<TuiAgent, string>>
         agentDefaultEnv?: Partial<Record<TuiAgent, Record<string, string>>>
+        headroomAgents?: HeadroomLaunchSettings['headroomAgents']
+        headroomWrapOptions?: HeadroomLaunchSettings['headroomWrapOptions']
         experimentalNativeChat?: boolean
         openAgentTabsInChatByDefault?: boolean
         nativeChatSessionOptions?: PersistedNativeChatSessionOptions
@@ -67,6 +73,7 @@ export function buildDirectWorkItemAgentStartupPlan(args: {
           agent: args.agent,
           draft: args.draftContent,
           cmdOverrides: args.settings?.agentCmdOverrides ?? {},
+          ...headroomLaunchSettings(args.settings),
           platform: args.launchPlatform,
           isRemote: args.isRemote,
           agentArgs: effectiveAgentArgs,
@@ -99,6 +106,7 @@ export function buildDirectWorkItemAgentStartupPlan(args: {
     agent: args.agent,
     prompt: '',
     cmdOverrides: args.settings?.agentCmdOverrides ?? {},
+    ...headroomLaunchSettings(args.settings),
     platform: args.launchPlatform,
     isRemote: args.isRemote,
     agentArgs: effectiveAgentArgs,

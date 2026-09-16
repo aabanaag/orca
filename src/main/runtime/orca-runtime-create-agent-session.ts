@@ -31,6 +31,7 @@ import {
   deterministicAgentSessionUuid,
   isAgentSessionOperationOutcomeUnknown
 } from './runtime-agent-launch-resolution'
+import { headroomLaunchSettings } from '../../shared/headroom-wrap-command'
 
 export class OrcaRuntimeWithCreateAgentSession extends OrcaRuntimeWithGetAgentSessionExecutionNamespace {
   async createAgentSession(
@@ -162,6 +163,7 @@ export class OrcaRuntimeWithCreateAgentSession extends OrcaRuntimeWithGetAgentSe
       const startupArgs = {
         agent: request.agent,
         cmdOverrides: settings.agentCmdOverrides ?? {},
+        ...headroomLaunchSettings(settings),
         agentArgs:
           request.agentArgs !== undefined
             ? request.agentArgs

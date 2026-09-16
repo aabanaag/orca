@@ -15,6 +15,7 @@ import { inlineAgentDraftFitsPlatform } from './agent-draft-platform-limit'
 import type { TuiAgent } from './tui-agent'
 import type { SessionOptionValue } from './native-chat-session-options'
 import { resolveAgentLaunchCommand } from './tui-agent-launch-command'
+import { isHeadroomWrappedCommand, type HeadroomWrapOptions } from './headroom-wrap-command'
 
 export { buildAgentResumeStartupPlan } from './tui-agent-resume-startup'
 
@@ -22,6 +23,8 @@ export type AgentStartupPlan = {
   agent: TuiAgent
   launchCommand: string
   expectedProcess: string
+  /** Launch goes through `headroom wrap`, so readiness must wait out the wrapper's proxy boot. */
+  headroomWrapped?: boolean
   followupPrompt: string | null
   launchConfig: SleepingAgentLaunchConfig
   launchToken?: string
@@ -51,6 +54,8 @@ export function buildAgentStartupPlan(args: {
   /** Why: SSH remotes deploy the CLI shim as plain `orca`, so the Linux-only
    * `orca-ide` rename must be skipped for remote launches. */
   isRemote?: boolean
+  headroomAgents?: Partial<Record<TuiAgent, boolean>>
+  headroomWrapOptions?: HeadroomWrapOptions
 }): AgentStartupPlan | null {
   const { agent, prompt, cmdOverrides, platform, allowEmptyPromptLaunch = false } = args
   const shell = resolveStartupShell(platform, args.shell)
@@ -65,11 +70,18 @@ export function buildAgentStartupPlan(args: {
     agentArgs: usesQuery ? null : args.agentArgs,
     sessionOptions: args.sessionOptions,
     sessionOptionsOverrideAgentArgs: args.sessionOptionsOverrideAgentArgs,
-    isRemote: args.isRemote
+    isRemote: args.isRemote,
+    headroomAgents: args.headroomAgents,
+    headroomWrapOptions: args.headroomWrapOptions
   })
   if (!baseCommand.ok) {
     return null
   }
+  // Why on the plan rather than re-derived by each reader: only this layer knows whether the
+  // resolver actually wrapped, and every downstream readiness check needs the same answer.
+  const headroomWrappedProps = isHeadroomWrappedCommand(baseCommand.command)
+    ? { headroomWrapped: true as const }
+    : {}
   const launchConfig = buildSleepingAgentLaunchConfig({
     ...args,
     // Why: picker flags are a one-time launch choice; a resumed provider
@@ -85,6 +97,7 @@ export function buildAgentStartupPlan(args: {
       agent,
       launchCommand: baseCommand.command,
       expectedProcess: config.expectedProcess,
+      ...headroomWrappedProps,
       followupPrompt: null,
       launchConfig,
       ...appliedSessionOptionProps(baseCommand.appliedSessionOptions),
@@ -100,6 +113,7 @@ export function buildAgentStartupPlan(args: {
       agent,
       launchCommand: `${baseCommand.command}${promptSeparator} ${quotedPrompt}`,
       expectedProcess: config.expectedProcess,
+      ...headroomWrappedProps,
       followupPrompt: null,
       launchConfig,
       ...appliedSessionOptionProps(baseCommand.appliedSessionOptions),
@@ -113,6 +127,7 @@ export function buildAgentStartupPlan(args: {
       agent,
       launchCommand: `${baseCommand.command} --prompt ${quotedPrompt}`,
       expectedProcess: config.expectedProcess,
+      ...headroomWrappedProps,
       followupPrompt: null,
       launchConfig,
       ...appliedSessionOptionProps(baseCommand.appliedSessionOptions),
@@ -139,6 +154,7 @@ export function buildAgentStartupPlan(args: {
       // only bounds and quotes the native invocation before starting the TUI.
       launchCommand: queryPlan.command,
       expectedProcess: config.expectedProcess,
+      ...headroomWrappedProps,
       followupPrompt: null,
       launchConfig,
       ...appliedSessionOptionProps(baseCommand.appliedSessionOptions),
@@ -151,6 +167,7 @@ export function buildAgentStartupPlan(args: {
       agent,
       launchCommand: `${baseCommand.command} --prompt-interactive ${quotedPrompt}`,
       expectedProcess: config.expectedProcess,
+      ...headroomWrappedProps,
       followupPrompt: null,
       launchConfig,
       ...appliedSessionOptionProps(baseCommand.appliedSessionOptions),
@@ -163,6 +180,7 @@ export function buildAgentStartupPlan(args: {
       agent,
       launchCommand: `${baseCommand.command} -i ${quotedPrompt}`,
       expectedProcess: config.expectedProcess,
+      ...headroomWrappedProps,
       followupPrompt: null,
       launchConfig,
       ...appliedSessionOptionProps(baseCommand.appliedSessionOptions),
@@ -174,6 +192,7 @@ export function buildAgentStartupPlan(args: {
     agent,
     launchCommand: baseCommand.command,
     expectedProcess: config.expectedProcess,
+    ...headroomWrappedProps,
     followupPrompt: trimmedPrompt,
     launchConfig,
     ...appliedSessionOptionProps(baseCommand.appliedSessionOptions),
@@ -185,6 +204,8 @@ export type AgentDraftLaunchPlan = {
   agent: TuiAgent
   launchCommand: string
   expectedProcess: string
+  /** See AgentStartupPlan.headroomWrapped. */
+  headroomWrapped?: boolean
   launchConfig: SleepingAgentLaunchConfig
   env?: Record<string, string>
   startupCommandDelivery?: StartupCommandDelivery
@@ -202,6 +223,8 @@ export function buildAgentDraftLaunchPlan(args: {
   sessionOptions?: Record<string, SessionOptionValue>
   /** Why: see buildAgentStartupPlan — remote launches use the plain `orca` shim. */
   isRemote?: boolean
+  headroomAgents?: Partial<Record<TuiAgent, boolean>>
+  headroomWrapOptions?: HeadroomWrapOptions
 }): AgentDraftLaunchPlan | null {
   const { agent, draft, cmdOverrides, platform } = args
   const shell = resolveStartupShell(platform, args.shell)
@@ -217,11 +240,18 @@ export function buildAgentDraftLaunchPlan(args: {
     shell,
     agentArgs: args.agentArgs,
     sessionOptions: args.sessionOptions,
-    isRemote: args.isRemote
+    isRemote: args.isRemote,
+    headroomAgents: args.headroomAgents,
+    headroomWrapOptions: args.headroomWrapOptions
   })
   if (!baseCommand.ok) {
     return null
   }
+  // Why on the plan rather than re-derived by each reader: only this layer knows whether the
+  // resolver actually wrapped, and every downstream readiness check needs the same answer.
+  const headroomWrappedProps = isHeadroomWrappedCommand(baseCommand.command)
+    ? { headroomWrapped: true as const }
+    : {}
   const launchConfig = buildSleepingAgentLaunchConfig({
     ...args,
     // Why: see the new-session path above — resume must not replay picker flags.
@@ -234,6 +264,7 @@ export function buildAgentDraftLaunchPlan(args: {
       agent,
       launchCommand: `${baseCommand.command} ${config.draftPromptFlag} ${quoted}`,
       expectedProcess: config.expectedProcess,
+      ...headroomWrappedProps,
       launchConfig,
       ...appliedSessionOptionProps(baseCommand.appliedSessionOptions),
       // Why: native draft flags carry user text on argv and must survive rc-file startup.
@@ -246,6 +277,7 @@ export function buildAgentDraftLaunchPlan(args: {
       agent,
       launchCommand: `${baseCommand.command}${commandSeparator(shell)}${clearVar}`,
       expectedProcess: config.expectedProcess,
+      ...headroomWrappedProps,
       launchConfig,
       ...appliedSessionOptionProps(baseCommand.appliedSessionOptions),
       env: { ...args.agentEnv, [config.draftPromptEnvVar]: trimmed }

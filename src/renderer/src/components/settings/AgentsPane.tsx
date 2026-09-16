@@ -5,6 +5,7 @@ import type { TuiAgent } from '../../../../shared/tui-agent'
 import { getAgentCatalog } from '@/lib/agent-catalog'
 import { useDetectedAgents, type AgentDetectionTarget } from '@/hooks/useDetectedAgents'
 import { useAppStore } from '@/store'
+import { isHeadroomWrappableAgent } from '../../../../shared/headroom-wrap-command'
 import { AgentAwakeSetting } from './AgentAwakeSetting'
 import { AgentCacheTimerSection } from './AgentCacheTimerSection'
 import { AgentRuntimeSetting } from './AgentRuntimeSetting'
@@ -177,6 +178,9 @@ export function AgentsPane({
   const cmdOverrides = settings.agentCmdOverrides ?? {}
   const agentDefaultArgs = settings.agentDefaultArgs ?? {}
   const agentDefaultEnv = settings.agentDefaultEnv ?? {}
+  const headroomAgents = settings.headroomAgents ?? {}
+  const headroomInstalled =
+    useAppStore((state) => state.preflightStatus?.headroom?.installed) === true
   const disabledAgents = normalizeDisabledTuiAgents(settings.disabledTuiAgents)
   const detectedAgents =
     detectedIds === null ? [] : catalog.filter((agent) => detectedIds.has(agent.id))
@@ -232,7 +236,17 @@ export function AgentsPane({
     sessionSourceHome:
       isDetected && agent.id === 'codex'
         ? buildCodexSessionSourceHomeControl(settings, updateSettings)
-        : undefined
+        : undefined,
+    headroom: isDetected
+      ? {
+          isSupported: isHeadroomWrappableAgent(agent.id),
+          isInstalled: headroomInstalled,
+          isEnabled: headroomAgents[agent.id] === true,
+          blockedByCmdOverride: Boolean(cmdOverrides[agent.id]?.trim()),
+          onSetEnabled: (enabled: boolean) =>
+            updateSettings({ headroomAgents: { ...headroomAgents, [agent.id]: enabled } })
+        }
+      : undefined
   })
 
   return (
