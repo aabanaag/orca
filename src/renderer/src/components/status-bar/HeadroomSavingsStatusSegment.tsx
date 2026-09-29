@@ -4,6 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { isPairedWebClientWindow } from '@/lib/desktop-window-chrome'
+import { useAppStore } from '@/store'
 import { translate } from '@/i18n/i18n'
 import {
   formatHeadroomPercent,
@@ -23,8 +24,17 @@ export function HeadroomSavingsStatusSegment({
   iconOnly: boolean
 }): React.JSX.Element | null {
   const [savings, setSavings] = useState<HeadroomSavings | null>(null)
+  // Why gate the poll rather than just hide the segment: without an opted-in agent there can be no
+  // Orca-started proxy to read, so polling would be perpetual work for every user who never turns
+  // Headroom on.
+  const headroomEnabled = useAppStore((state) =>
+    Object.values(state.settings?.headroomAgents ?? {}).some(Boolean)
+  )
 
   useEffect(() => {
+    if (!headroomEnabled) {
+      return
+    }
     let mounted = true
     const poll = (): void => {
       void window.api.headroom
@@ -42,7 +52,7 @@ export function HeadroomSavingsStatusSegment({
       mounted = false
       window.clearInterval(timer)
     }
-  }, [])
+  }, [headroomEnabled])
 
   // Nothing compressed yet (or no proxy): stay out of the status bar entirely.
   if (isPairedWebClientWindow() || !hasHeadroomSavings(savings) || !savings) {

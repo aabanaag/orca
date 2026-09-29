@@ -24,8 +24,6 @@ export type PreflightStatus = {
     baseUrl: string | null
     tokenConfigured: boolean
   }
-  /** Headroom context-compression CLI. Optional — hosts predating the probe omit it. */
-  headroom?: { installed: boolean }
 }
 
 export type RefreshAgentsResult = {

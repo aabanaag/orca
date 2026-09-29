@@ -2,6 +2,8 @@ import { readdir, readFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { parseHeadroomSavings, type HeadroomSavings } from '../../shared/headroom-savings'
+import { HEADROOM_COMMAND } from '../../shared/headroom-wrap-command'
+import { detectCommandRuntime } from '../preflight/agent-detection'
 
 /** Headroom's documented default proxy port; `wrap` only moves off it when it is taken. */
 const DEFAULT_HEADROOM_PORT = 8787
@@ -95,4 +97,19 @@ export async function readHeadroomSavings(): Promise<HeadroomSavings | null> {
 export function _resetHeadroomSavingsCache(): void {
   cached = null
   inFlight = null
+}
+
+/**
+ * Whether the `headroom` CLI is on PATH, for gating the per-agent toggle.
+ *
+ * Deliberately not folded into `runPreflightCheck`: that reports on the source-control toolchain
+ * (git/gh/glab and provider auth), and a compression proxy is not part of it. Keeping it here also
+ * leaves the preflight RPC shape - which mobile clients consume - untouched.
+ */
+export async function isHeadroomInstalled(): Promise<boolean> {
+  try {
+    return (await detectCommandRuntime(HEADROOM_COMMAND)).installed
+  } catch {
+    return false
+  }
 }

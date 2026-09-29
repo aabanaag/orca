@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Info } from 'lucide-react'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import type { TuiAgent } from '../../../../shared/tui-agent'
@@ -179,8 +179,16 @@ export function AgentsPane({
   const agentDefaultArgs = settings.agentDefaultArgs ?? {}
   const agentDefaultEnv = settings.agentDefaultEnv ?? {}
   const headroomAgents = settings.headroomAgents ?? {}
-  const headroomInstalled =
-    useAppStore((state) => state.preflightStatus?.headroom?.installed) === true
+  const [headroomInstalled, setHeadroomInstalled] = useState(false)
+  // Re-queried on Refresh so a just-installed `headroom` is picked up without an app relaunch,
+  // matching what Refresh already does for agent CLIs.
+  const refreshHeadroomInstalled = useCallback(() => {
+    void window.api.headroom
+      ?.isInstalled()
+      .then(setHeadroomInstalled)
+      .catch(() => setHeadroomInstalled(false))
+  }, [])
+  useEffect(refreshHeadroomInstalled, [refreshHeadroomInstalled])
   const disabledAgents = normalizeDisabledTuiAgents(settings.disabledTuiAgents)
   const detectedAgents =
     detectedIds === null ? [] : catalog.filter((agent) => detectedIds.has(agent.id))
@@ -288,7 +296,10 @@ export function AgentsPane({
         isRefreshing={isRefreshing}
         activeServerEnvironmentId={activeServerEnvironmentId}
         activeServerName={activeServerName}
-        onRefresh={() => void refreshTargetAgents()}
+        onRefresh={() => {
+          refreshHeadroomInstalled()
+          void refreshTargetAgents()
+        }}
         getRowProps={getRowProps}
       />
     </div>
