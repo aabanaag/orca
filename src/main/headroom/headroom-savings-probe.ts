@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { parseHeadroomSavings, type HeadroomSavings } from '../../shared/headroom-savings'
 import { HEADROOM_COMMAND } from '../../shared/headroom-wrap-command'
 import { detectCommandRuntime } from '../preflight/agent-detection'
+import { cancelUnreadResponseBody } from '../lib/unread-response-body'
 
 /** Headroom's documented default proxy port; `wrap` only moves off it when it is taken. */
 const DEFAULT_HEADROOM_PORT = 8787
@@ -54,7 +55,12 @@ async function fetchSavings(port: number): Promise<HeadroomSavings | null> {
     const response = await fetch(`http://127.0.0.1:${port}/stats`, {
       signal: AbortSignal.timeout(PROBE_TIMEOUT_MS)
     })
-    return response.ok ? parseHeadroomSavings(await response.json()) : null
+    if (!response.ok) {
+      // Why: an unread undici body can crash the process (orca#8695).
+      await cancelUnreadResponseBody(response)
+      return null
+    }
+    return parseHeadroomSavings(await response.json())
   } catch {
     // No proxy on this port, or it is still loading its models and not serving yet.
     return null

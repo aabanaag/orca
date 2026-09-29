@@ -6,6 +6,7 @@ const {
   callRuntimeEnvironmentMock,
   registerCliHandlersMock,
   registerPreflightHandlersMock,
+  registerHeadroomHandlersMock,
   registerUsageProviderHandlersMock,
   registerGitHubHandlersMock,
   registerFeedbackHandlersMock,
@@ -73,6 +74,7 @@ const {
   callRuntimeEnvironmentMock: vi.fn(),
   registerCliHandlersMock: vi.fn(),
   registerPreflightHandlersMock: vi.fn(),
+  registerHeadroomHandlersMock: vi.fn(),
   registerUsageProviderHandlersMock: vi.fn(),
   registerGitHubHandlersMock: vi.fn(),
   registerFeedbackHandlersMock: vi.fn(),
@@ -181,6 +183,10 @@ vi.mock('../cli', () => ({
 
 vi.mock('../preflight', () => ({
   registerPreflightHandlers: registerPreflightHandlersMock
+}))
+
+vi.mock('../headroom', () => ({
+  registerHeadroomHandlers: registerHeadroomHandlersMock
 }))
 
 vi.mock('../usage-provider-handlers', () => ({
